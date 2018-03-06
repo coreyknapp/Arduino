@@ -48,7 +48,14 @@ import cc.arduino.contributions.filters.InstalledPredicate;
 import cc.arduino.contributions.libraries.ContributedLibrary;
 import cc.arduino.contributions.libraries.filters.OnlyUpstreamReleasePredicate;
 import cc.arduino.contributions.ui.InstallerTableCell;
+import cc.arduino.contributions.ui.listeners.AbstractKeyListener;
 import cc.arduino.utils.ReverseComparator;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import javax.swing.AbstractAction;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.KeyStroke;
 
 @SuppressWarnings("serial")
 public class ContributedLibraryTableCellEditor extends InstallerTableCell {
@@ -66,7 +73,6 @@ public class ContributedLibraryTableCellEditor extends InstallerTableCell {
                                                boolean isSelected, int row,
                                                int column) {
     editorValue = (ContributedLibraryReleases) value;
-
     editorCell = new ContributedLibraryTableCellJPanel(table, value, true);
     editorCell.installButton
         .addActionListener(e -> onInstall(editorValue.getSelected(),
@@ -79,7 +85,7 @@ public class ContributedLibraryTableCellEditor extends InstallerTableCell {
     editorCell.versionToInstallChooser.addItemListener(e -> editorValue
         .select((ContributedLibrary) editorCell.versionToInstallChooser
             .getSelectedItem()));
-
+    
     setEnabled(true);
 
     final ContributedLibrary installed = editorValue.getInstalled();
@@ -120,19 +126,49 @@ public class ContributedLibraryTableCellEditor extends InstallerTableCell {
     uninstalledNewerReleases.forEach(editorCell.downgradeChooser::addItem);
     uninstalledPreviousReleases.forEach(editorCell.downgradeChooser::addItem);
 
+    String accessibleDesc = "";
     editorCell.downgradeChooser
         .setVisible(installed != null
                     && (!uninstalledPreviousReleases.isEmpty()
                         || uninstalledNewerReleases.size() > 1));
+    if(editorCell.downgradeChooser.isVisible()){
+      editorCell.downgradeChooser.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("D"), "downgradeSelect");
+      editorCell.downgradeChooser.getActionMap().put("downgradeSelect", new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          editorCell.downgradeChooser.requestFocusInWindow();
+        }
+      });
+      accessibleDesc += " Press D to select previous version to update to and Alt+U to update to that version";
+      editorCell.downgradeButton.setMnemonic(KeyEvent.VK_U);
+    }
     editorCell.downgradeButton
         .setVisible(installed != null
                     && (!uninstalledPreviousReleases.isEmpty()
                         || uninstalledNewerReleases.size() > 1));
+    
 
     editorCell.versionToInstallChooser.removeAllItems();
     uninstalledReleases.forEach(editorCell.versionToInstallChooser::addItem);
     editorCell.versionToInstallChooser
         .setVisible(installed == null && uninstalledReleases.size() > 1);
+    
+    if(editorCell.versionToInstallChooser.isVisible()){
+      editorCell.versionToInstallChooser.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("V"), "versionSelect");
+      editorCell.versionToInstallChooser.getActionMap().put("versionSelect", new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          editorCell.versionToInstallChooser.requestFocusInWindow();
+        }
+      });
+      accessibleDesc += " Press V to select version to install";
+    }
+    
+    if(editorCell.installButton.isVisible() && editorCell.installButton.isEnabled()){
+      editorCell.installButton.setMnemonic(KeyEvent.VK_I);
+      accessibleDesc += " Press Alt+I to install";
+    }
+
 
     editorCell.setBackground(new Color(218, 227, 227)); // #dae3e3
     return editorCell;

@@ -25,6 +25,8 @@ import javax.swing.text.html.StyleSheet;
 import cc.arduino.contributions.DownloadableContributionVersionComparator;
 import cc.arduino.contributions.libraries.ContributedLibrary;
 import cc.arduino.contributions.ui.InstallerTableCell;
+import cc.arduino.contributions.ui.listeners.AbstractKeyListener;
+import java.awt.event.KeyEvent;
 import processing.app.Base;
 import processing.app.Theme;
 
@@ -38,6 +40,7 @@ public class ContributedLibraryTableCellJPanel extends JPanel {
   final JPanel buttonsPanel;
   final JPanel inactiveButtonsPanel;
   final JLabel statusLabel;
+  String accessibleDesc;
 
   public ContributedLibraryTableCellJPanel(JTable parentTable, Object value,
                                            boolean isSelected) {
@@ -47,6 +50,7 @@ public class ContributedLibraryTableCellJPanel extends JPanel {
     installButton = new JButton(tr("Install"));
     int width = installButton.getPreferredSize().width;
     installButtonPlaceholder = Box.createRigidArea(new Dimension(width, 1));
+    installButton.setMnemonic(KeyEvent.VK_I);
 
     downgradeButton = new JButton(tr("Install"));
 
@@ -186,6 +190,8 @@ public class ContributedLibraryTableCellJPanel extends JPanel {
     desc += "</body></html>";
     description.setText(desc);
     description.setBackground(Color.WHITE);
+    
+    accessibleDesc = desc;
 
     // for modelToView to work, the text area has to be sized. It doesn't
     // matter if it's visible or not.
@@ -203,6 +209,7 @@ public class ContributedLibraryTableCellJPanel extends JPanel {
       setBackground(parentTable.getBackground());
       setForeground(parentTable.getForeground());
     }
+    
   }
 
   private JTextPane makeNewDescription() {
@@ -242,5 +249,12 @@ public class ContributedLibraryTableCellJPanel extends JPanel {
     installButton.setEnabled(enabled);
     buttonsPanel.setVisible(enabled);
     inactiveButtonsPanel.setVisible(!enabled);
+  }
+  
+  public void setAccessibleDescription(String suffix) {
+    String desc = accessibleDesc.replace("</body></html>", "") 
+            + suffix + "</body></html>";
+    System.out.println("Desc " + desc);
+    getAccessibleContext().setAccessibleDescription(desc);
   }
 }
